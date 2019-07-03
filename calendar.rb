@@ -1,62 +1,59 @@
 # this is the calender class
 require 'date'
 require 'time'
-#require 'chronic'
-#require 'active_support/all'
 require_relative 'event'
 
+# Public: Class for Calendar
+#
+# MONTHS  - Array of months in full form.
+# count - A hash conatining events as a value to a key(date)
+#
+# Performs Add, Remove, Edit, Print functions
 class Calendar
-  
   @@MONTHS = Date::MONTHNAMES
 
   def initialize
     @events_list = Hash.new(0)
   end
 
-  public
-  def addEvent(date, ev_name, ev_description)
+  def add_event(date, ev_name, ev_description)
     new_event = Event.new(ev_name, ev_description)
-    if @events_list.has_key?(date)
-      # Hash already has this key, add in the array
-      @events_list[date] << new_event
-    else
+    unless @events_list.key?(date)
       # Create an key and create array in front of it
       # then add the first event in the array
       @events_list[date] = []
-      @events_list[date] << new_event
     end
-    endingLine("Event Added Successfully!")
-    goBack
-    return "Success"
+    @events_list[date] << new_event
+    ending_line('Event Added Successfully!')
+    go_back
+    'Success'
   end
 
-  def removeEvent!(date, ev_name)
-    result = "failure"
-    if @events_list.has_key?(date)
+  def remove_event!(date, ev_name)
+    result = 'failure'
+    if @events_list.key?(date)
       ev = @events_list[date]
       ev.each do |e|
         if e.name == ev_name
           # remove it
           ev.delete(e)
-          endingLine("Event Removed Successfully!")
+          ending_line('Event Removed Successfully!')
           if ev.empty?
-            # if this event was single item against d, 
-            # delete key d from hash as well
             @events_list.delete(date)
           end
-          result = "Success"
+          result = 'Success'
         else
-          errorMessage("This event name is invalid!")
+          error_message('This event name is invalid!')
         end
       end
     end
-    goBack
+    go_back
     result
   end
 
-  def editEvent!(date, ev_name, new_name, new_desc)
-    result = "failure"
-    if @events_list.has_key?(date)
+  def edit_event!(date, ev_name, new_name, new_desc)
+    result = 'failure'
+    if @events_list.key?(date)
       ev = @events_list[date]
       ev.each do |e|
         if e.name == ev_name
@@ -67,66 +64,65 @@ class Calendar
           unless new_desc.empty?
             e.description = new_desc
           end
-          endingLine("Event Edited Successfully!")
-          result = "Success"
+          ending_line('Event Edited Successfully!')
+          result = 'Success'
         else
-          errorMessage("This event name is invalid!")
+          error_message('This event name is invalid!')
         end
       end
     end
-    goBack
+    go_back
     result
   end
 
-  def showEventsOnDate(date)
-    if @events_list.has_key?(date)
+  def show_events_on_date(date)
+    if @events_list.key?(date)
       ev = @events_list[date]
-      puts "You have following events on this date:"
-      ev.each { |x| x.to_s }
+      puts 'You have following events on this date:'
+      ev.each(&:to_s)
       puts
     end
   end
 
-  def printEvents
-    # prints all events of a person
+  def print_events
     if @events_list.empty?
-      endingLine("No events in Calendar")
+      ending_line('No events in Calendar')
     else
-      @events_list.each do |key, value| 
+      @events_list.each do |key, value|
         puts "On date #{key}:"
         value.each do |ev|
           ev.to_s
-        puts
-        end 
+          puts
+        end
       end
     end
-    goBack
+    go_back
   end
 
-  def printEventsOnDate(d)
+  def print_events_on_date(date)
     if @events_list.empty?
-      errorMessage("No events in Calendar")
+      error_message('No events in Calendar')
     else
-      ev = @events_list[d]
+      ev = @events_list[date]
       if ev.empty?
-        errorMessage("No events at #{d.to_s}")
+        error_message("No events at #{date}")
       else
-        puts "Your events on #{d.to_s}"
+        puts "Your events on #{date}"
         ev.each do |event|
           event.to_s
           puts
-        end 
+        end
       end
     end
-    goBack
+    go_back
   end
 
-  def printEventsOfMonth(month)
+  def print_events_of_month(month)
     # to do
     if @events_list.empty?
-      errorMessage("No events in Calendar")
+      error_message('No events in Calendar')
     else
-      @events_list.each do |key,value|
+      @events_list.each do |key, _|
         if key.month == month
           ev = @events_list[key]
           puts "The events of #{@@MONTHS[month]}"
@@ -137,94 +133,101 @@ class Calendar
         end
       end
     end
-    goBack
+    go_back
   end
 
-  def printCalendar(date)
-    # print the Calender in Month form
-    month = date.month
-    year = date.year
-    week_day = Date.new(year,month,1).cwday
-    puts "week day: #{week_day}"
+  def print_calendar(year, month)
+    week_day = Date.new(year, month, 1).cwday
     month_length = days_in_month(year, month)
     line = ["Sun\tMon\tTues\tWed\tThurs\tFri\tSat"]
     days = (1..month_length).to_a
-    (week_day).times { days.unshift("\t") }
+    week_day.times { days.unshift("\t") }
 
     puts
-    puts "#{@@MONTHS[date.month]} #{year}"
-    puts line 
+    puts "#{@@MONTHS[month]} #{year}"
+    puts line
     days.each_slice(7) do |week|
       week.each do |d|
         print d
-        unless d=="\t"
-          print "\t"
+
+        # check if there is a event at this date
+        unless d == "\t"
+          curr_date = Date.new(year, month, d.to_i)
+          if @events_list.key?(curr_date)
+            count = @events_list[curr_date].size
+            print "[#{count}]"
+          end
         end
+
+        print "\t" unless d == "\t"
       end
       puts
     end
     puts
-    goBack
+    go_back
   end
 
-  def hasEvents?
+  def events?
     if @events_list.empty?
-      r = false
+      false
     else
-      r = true
+      true
     end
   end
 
-  def hasEventsAt?(date)
+  def events_at?(date)
     if @events_list[date].empty?
-      r = false
+      false
     else
-      r = true
+      true
     end
   end
 
-  def noEvents?
+  def valid_event_name?(e_name)
+    result = false
+    if events?
+      @events_list.each do |_, events|
+        events.each do |event|
+          # puts "event_name: #{event.name}, e_name: #{e_name}"
+          result = true if event.name == e_name
+        end
+      end
+    end
+    result
+  end
+
+  def no_events?
     if @events_list.empty?
-      r = true
+      true
     else
-      r = false
+      false
     end
   end
 
   private
+
   def days_in_month(year, month)
     Date.new(year, month, -1).day
   end
 
-  def format_calendar offset, month_length
-    lines = [ "Sun Mon Tue Wed Thu Fri Sat" ]
-    dates = [nil] * offset + (1..month_length).to_a
-    dates.each_slice(7) do |week|
-      lines << week.map { |date| date.to_s.rjust(3) }.join(' ')
-    end
-    lines.join("\n")
-
-  end
-
-  def endingLine(message)
+  def ending_line(message)
     puts
-    puts "---------------------------------------------------------"
+    puts '---------------------------------------------------------'
     puts "---------------#{message}----------------"
-    puts "---------------------------------------------------------"
+    puts '---------------------------------------------------------'
     puts
   end
 
-  def errorMessage(message)
+  def error_message(message)
     puts
-    puts "--------------------------------------------------------"
+    puts '--------------------------------------------------------'
     puts "!!!!!!!!!!!!!!!!!!!!#{message}!!!!!!!!!!!!!!!!!!"
-    puts "---------------------------------------------------------"
+    puts '---------------------------------------------------------'
     puts
   end
 
-  def goBack
-    puts "--Press any key to go back to Menu.."
-    go_back = gets
+  def go_back
+    puts '--Press any key to go back to Menu..'
+    gets
   end
-
 end
