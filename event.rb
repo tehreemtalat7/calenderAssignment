@@ -1,11 +1,11 @@
-# this is a class for events
-
+# Public: this is a class for events
+#
+# A class to contain name and description of events
 class Event
-
   attr_accessor :name, :description
 
-  def initialize(ename, description)
-    @name = ename
+  def initialize(name, description)
+    @name = name
     @description = description
   end
 
@@ -13,5 +13,4 @@ class Event
     puts "Event: #{@name}"
     puts "-- #{description}"
   end
-
 end

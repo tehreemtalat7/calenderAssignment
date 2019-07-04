@@ -3,8 +3,17 @@ require 'date'
 require_relative 'calendar'
 require_relative 'event'
 
+ADD_EVENT = '1'.freeze
+REMOVE_EVENT = '2'.freeze
+EDIT_EVENT = '3'.freeze
+PRINT_CALENDAR = '4'.freeze
+SHOW_ALL_EVENTS = '5'.freeze
+SHOW_EVENTS_ON_A_DATE = '6'.freeze
+SHOW_EVENTS_OF_MONTH = '7'.freeze
+EXIT = 'q'.freeze
+
 def display_menu
-  puts '*-* The Calender Menu *-*'
+  puts "\n\n*-* The Calender Menu *-*"
   puts 'Press 1 to Add Event to Calendar'
   puts 'Press 2 to Remove an Event from Calendar'
   puts 'Press 3 to Edit an Event'
@@ -16,143 +25,122 @@ def display_menu
   print 'Your option: '
 end
 
+def press_enter_for_menu
+  puts '--Press any key to go back to Menu..'
+  gets
+end
+
 def input_date_from_user
   print 'Enter Date(yyyy-mm-dd): '
   date = gets
-  date.chomp!
+  date.chomp!.strip!
   Date.parse(date)
 rescue ArgumentError
-  puts 'Invalid Date! Try Again!'
-  puts
+  puts "Invalid Date! Try Again!\n\n"
   retry
 end
 
 def error_message(message)
-    puts
-    puts '---------------------------------------------------------'
-    puts "!!!!!!!!!!!!!!!! #{message} !!!!!!!!!!!!!!!!!!!!"
-    puts '---------------------------------------------------------'
-    puts
-end
-
-def new_line
-  puts
+  puts "\n\n-------------------------------------------------------"
+  puts "!!!!!!!!!!!!!!!! #{message} !!!!!!!!!!!!!!!!!!!!\n\n"
+  puts "---------------------------------------------------------\n\n"
 end
 
 def start
-  input = '4' # default
+  input = PRINT_CALENDAR # default
   C.print_calendar(Date.today.year, Date.today.month)
 
-  while input != 'q'
-    new_line
+  while input != EXIT
     display_menu
     input = gets
-    input = input.chomp
-    puts '*****************************'
-    new_line
+    input.chomp!.strip!
+    puts "*****************************\n\n"
 
     case input
-    when '1'
-      puts '----Add Event----'
-      new_line
+    when ADD_EVENT
+      puts "----Add Event---- \n\n"
       date = input_date_from_user
       print 'Event Name: '
       event_name = gets
-      event_name.chomp!
+      event_name.chomp!.strip!
       print 'Event Description: '
       event_description = gets
-      event_description.chomp!
-      C.add_event(date, event_name, event_description)
+      event_description.chomp!.strip!
+      puts C.add_event!(date, event_name, event_description)
+      press_enter_for_menu
 
-    when '2'
-      puts '----Remove Event----'
+    when REMOVE_EVENT
+      puts "----Remove Event----\n\n"
       if C.events?
-        new_line
         date = input_date_from_user
-        new_line
-        if C.events_at?(date)
-          C.show_events_on_date(date)
-          print 'Event Name to remove: '
-          event_name = gets
-          event_name.chomp!
-          C.remove_event!(date, event_name)
-        else
-          error_message('No events at this date')
-        end
+        C.show_events_on_date(date)
+        print 'Event Name to remove: '
+        event_name = gets
+        event_name.chomp!.strip!
+        puts C.remove_event!(date, event_name)
       else
         error_message('Calendar has no Events!')
       end
+      press_enter_for_menu
 
-    when '3'
-      puts '----Edit Event----'
+    when EDIT_EVENT
+      puts "----Edit Event----\n\n"
       if C.events?
-        new_line
         date = input_date_from_user
-        new_line
-        if C.events_at?(date)
-          C.show_events_on_date(date)
-          print 'Event Name to edit: '
-          event_name = gets
-          event_name.chomp!
-          if C.valid_event_name?(event_name)
-            puts 'Enter New Details:-'
-            puts '{press enter in case you dont want something updated}'
-            print 'New Name: '
-            new_name = gets
-            new_name.chomp!
-            print 'New Description: '
-            new_desc = gets
-            new_desc.chomp!
-            C.edit_event!(date, event_name, new_name, new_desc)
-          else
-            error_message('This event name is invalid!')
-          end
-        else
-          error_message('No events at this date')
-        end
+        C.show_events_on_date(date)
+        print 'Event Name to edit: '
+        event_name = gets
+        event_name.chomp!.strip!
+        puts 'Enter New Details:-'
+        puts '{press enter in case you dont want something updated}'
+        print 'New Name: '
+        new_name = gets
+        new_name.chomp!.strip!
+        print 'New Description: '
+        new_desc = gets
+        new_desc.chomp!.strip!
+        puts C.edit_event!(date, event_name, new_name, new_desc)
       else
         error_message('Calendar has no Events!')
       end
+      press_enter_for_menu
 
-    when '4'
-      puts '----Print Calendar----'
-      new_line
+    when PRINT_CALENDAR
+      puts "----Print Calendar----\n\n"
       print 'Enter year(yyyy): '
       year = gets
-      year.chomp!
+      year.chomp!.strip!
       print 'Enter month[1-12]: '
       month = gets
-      month.chomp!
+      month.chomp!.strip!
       C.print_calendar(year.to_i, month.to_i)
+      press_enter_for_menu
 
-    when '5'
-      puts '----Your Events----'
-      new_line
-      C.print_events
+    when SHOW_ALL_EVENTS
+      puts "----Your Events----\n\n"
+      C.print_all_events
+      press_enter_for_menu
 
-    when '6'
-      puts '----Your Events on specific date----'
+    when SHOW_EVENTS_ON_A_DATE
+      puts "----Your Events on specific date----\n\n"
       if C.events?
-        new_line
         date = input_date_from_user
-        new_line
         C.print_events_on_date(date)
       else
         error_message('Calendar has no Events!')
       end
+      press_enter_for_menu
 
-    when '7'
-      puts '----Your Events of a month----'
-      new_line
+    when SHOW_EVENTS_OF_MONTH
+      puts "----Your Events of a month----\n\n"
       print 'Enter the month number[1-12]: '
       month = gets
-      month.chomp!
-      new_line
+      month.chomp!.strip!
       C.print_events_of_month(month.to_i)
+      press_enter_for_menu
 
-    when 'q'
-      puts '----Exiting----'
-      new_line
+    when EXIT
+      puts "----Exiting----\n\n"
       return input
     end
   end
